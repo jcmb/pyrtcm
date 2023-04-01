@@ -109,8 +109,8 @@ def read(stream, errorhandler, quitonerror, validate,
             if 1009  <= msg_id <= 1012 : # GLONASS
                 continue
 
-        if msg_id in RTCM_MSGIDS:
-            print (f"ID: {parsed_data.identity} ({RTCM_MSGIDS[msg_id]})" )
+        if parsed_data.identity in RTCM_MSGIDS:
+            print (f"ID: {msg_id} ({RTCM_MSGIDS[parsed_data.identity]})" )
         else:
             print ("ID: {} (Unknown)" , msg_id)
 
