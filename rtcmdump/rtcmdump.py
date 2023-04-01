@@ -146,7 +146,7 @@ def read(stream, errorhandler, quitonerror, validate,
         if msg_id in OUTPUT_FUNCTIONS:
             if str(msg_id) in RTCM_MSGIDS:
                 print ("{:<4} : {:>6} : {}" .format (\
-                    msg_id,message_counts[id], RTCM_MSGIDS[str(msg_id)]))
+                    msg_id,message_counts[msg_id], RTCM_MSGIDS[str(msg_id)]))
             else:
                 print ("{:<4} : {:>6} : Unknown" .format(\
                     msg_id, message_counts[msg_id]))
