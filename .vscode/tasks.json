@@ -1,13 +1,11 @@
 {
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
-    // These Python project tasks assume you have installed and configured: 
-    // build, wheel, black, pytest, pylint, unittest, coverage, Sphinx, sphinx-rtd-theme
-    // Use the Update Toolchain task to ensure the necessary tools are installed.
+    // Use the Install Build/Test Dependencies tasks to install the necessary toolchain.
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Update Toolchain",
+            "label": "Install Deploy Dependencies",
             "type": "process",
             "command": "${config:python.defaultInterpreterPath}",
             "args": [
@@ -15,15 +13,33 @@
                 "pip",
                 "install",
                 "--upgrade",
-                "setuptools",
-                "build",
-                "wheel",
-                "pylint",
-                "pytest",
-                "pytest-cov",
-                "black",
-                "Sphinx",
-                "sphinx-rtd-theme",
+                ".[deploy]"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Install Test Dependencies",
+            "type": "process",
+            "command": "${config:python.defaultInterpreterPath}",
+            "args": [
+                "-m",
+                "pip",
+                "install",
+                "--upgrade",
+                ".[test]"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Install Dependencies",
+            "type": "process",
+            "command": "${config:python.defaultInterpreterPath}",
+            "args": [
+                "-m",
+                "pip",
+                "install",
+                "--upgrade",
+                "."
             ],
             "problemMatcher": []
         },
@@ -68,19 +84,7 @@
             "args": [
                 "-m",
                 "black",
-                "src/${config:modulename}"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "PylintError",
-            "type": "process",
-            "command": "${config:python.defaultInterpreterPath}",
-            "args": [
-                "-m",
-                "pylint",
-                "-E",
-                "src/${config:modulename}"
+                "src"
             ],
             "problemMatcher": []
         },
@@ -91,8 +95,21 @@
             "args": [
                 "-m",
                 "pylint",
-                "--reports=y",
-                "src/${config:modulename}"
+                "src"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "Security",
+            "type": "process",
+            "command": "${config:python.defaultInterpreterPath}",
+            "args": [
+                "-m",
+                "bandit",
+                "-c",
+                "pyproject.toml",
+                "-r",
+                "."
             ],
             "problemMatcher": []
         },
@@ -105,6 +122,7 @@
                 "build",
                 ".",
                 "--wheel",
+                "--sdist",
             ],
             "problemMatcher": []
         },
@@ -114,7 +132,7 @@
             "command": "${config:python.defaultInterpreterPath}",
             "args": [
                 "-m",
-                "pytest"
+                "pytest",
             ],
             "problemMatcher": []
         },
@@ -123,6 +141,13 @@
             "type": "process",
             "command": "sphinx-apidoc",
             "args": [
+                "--doc-project=${config:modulename}",
+                "--doc-author=semuadmin",
+                "--doc-version=${config:moduleversion}",
+                "--doc-release=${config:moduleversion}",
+                "--ext-autodoc",
+                "--ext-viewcode",
+                "--templatedir=docs",
                 "-f",
                 "-o",
                 "docs",
@@ -150,14 +175,15 @@
             "problemMatcher": []
         },
         {
-            "label": "Sphinx Deploy to S3",
+            "label": "Sphinx Deploy to S3", // needs AWS credentials
             "type": "process",
             "command": "aws",
             "args": [
                 "s3",
                 "cp",
                 "${workspaceFolder}/docs/_build/html",
-                "s3://www.semuconsulting.com/${config:modulename}/"
+                "s3://www.semuconsulting.com/${config:modulename}/",
+                "--recursive"
             ],
             "dependsOrder": "sequence",
             "dependsOn": [
@@ -180,8 +206,11 @@
             "dependsOrder": "sequence",
             "dependsOn": [
                 "Clean",
+                "Install Deploy Dependencies",
+                "Install Test Dependencies",
+                "Install Dependencies",
+                "Security",
                 "Format",
-                "PylintError",
                 "Pylint",
                 "Test",
                 "Build",
